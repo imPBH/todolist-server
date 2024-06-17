@@ -1,0 +1,509 @@
+openapi: 3.0.1
+info:
+  description: 'API Todo app'
+  version: '1'
+  title: 'API Todo app'
+servers:
+  - url: 'http://localhost:3000'
+tags:
+  - name: 'authentication'
+    description: 'Everything about authentication'
+  - name: 'users'
+    description: 'Everything about users'
+  - name: 'todos'
+    description: 'Everything about todos'
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - 'authentication'
+      summary: 'Create a new user'
+      description: 'Create a new user'
+      operationId: 'register'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/register'
+      responses:
+        '201':
+          description: 'User created successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  /auth/login:
+    post:
+      tags:
+        - 'authentication'
+      summary: 'Login'
+      description: 'Login'
+      operationId: 'login'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login'
+      responses:
+        '200':
+          description: 'User created successfully'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  user:
+                    $ref: '#/components/schemas/user'
+                  token:
+                    type: 'string'
+                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwMTY3NzU3MiwiZXhwIjoxNzAxNjgxMTcyfQ.NzOvoiy_LN8doxeA8dmBwuRDXFKmIs93Mg2Rk64env8'
+                required:
+                  - user
+                  - token
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+  /users:
+    get:
+      tags:
+        - 'users'
+      summary: 'Retrieve all users'
+      description: 'Retrieve all users, only admins can access this ressource'
+      operationId: 'getUsers'
+      responses:
+        '200':
+          $ref: '#/components/responses/usersList'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+  /users/{id}:
+    get:
+      tags:
+        - 'users'
+      summary: 'Retrieve a user by ID'
+      description: 'Retrieve a user by ID, only admins and corresponding user can access this ressource'
+      operationId: 'getUserById'
+      parameters:
+        - name: 'id'
+          in: 'path'
+          required: true
+          description: 'ID of the user to retrieve'
+          schema:
+            type: 'number'
+      responses:
+        '200':
+          description: 'User retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    patch:
+      tags:
+        - 'users'
+      summary: 'Update a user by ID'
+      description: 'Update a user by ID, only admins and corresponding user can modify this ressource. Only admins can modify the role'
+      operationId: 'updateUserById'
+      parameters:
+        - name: 'id'
+          in: 'path'
+          required: true
+          description: 'ID of the user to update'
+          schema:
+            type: 'number'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateUser'
+      responses:
+        '200':
+          description: 'User updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+    delete:
+      tags:
+        - 'users'
+      summary: 'Delete a user by ID'
+      description: 'Delete a user by ID, only admins and corresponding user can delete this ressource'
+      operationId: 'deleteUserById'
+      parameters:
+        - name: 'id'
+          in: 'path'
+          required: true
+          description: 'ID of the user to delete'
+          schema:
+            type: 'number'
+      responses:
+        '200':
+          description: 'User deleted successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+  /todos:
+    get:
+      tags:
+        - 'todos'
+      summary: 'Retrieve all todos'
+      description: 'Retrieve all todos, only admins can access this ressource'
+      operationId: 'getTodos'
+      responses:
+        '200':
+          $ref: '#/components/responses/todosList'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+  
+    post:
+      tags:
+        - 'todos'
+      summary: 'Add a new todo'
+      description: 'Add a new todo, you need to be authentified'
+      operationId: 'addTodo'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/addTodo'
+      responses:
+        '201':
+          description: 'Todo added successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/todo'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+  /todos/{todoId}:
+    get:
+      tags:
+        - 'todos'
+      summary: 'Retrieve a todo by its id'
+      description: 'Retrieve a todo by its id, only admins and owner can access this ressource'
+      operationId: 'getTodoById'
+      parameters:
+        - name: 'todoId'
+          in: 'path'
+          required: true
+          description: 'ID of the todo'
+          schema:
+            type: 'number'
+      responses:
+        '200':
+          description: 'Todo retrieved successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/todo'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+    patch:
+      tags:
+        - 'todos'
+      summary: 'Update a todo by ID'
+      description: 'Update a todo by ID, only admins and owner can modify this ressource.'
+      operationId: 'updateTodoById'
+      parameters:
+        - name: 'todoId'
+          in: 'path'
+          required: true
+          description: 'ID of the todo to update'
+          schema:
+            type: 'number'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateTodo'
+      responses:
+        '200':
+          description: 'Todo updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/todo'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+    delete:
+      tags:
+        - 'todos'
+      summary: 'Delete a todo by ID'
+      description: 'Delete a todo by ID, only admins and owner can delete this ressource'
+      operationId: 'deleteTodoById'
+      parameters:
+        - name: 'todoId'
+          in: 'path'
+          required: true
+          description: 'ID of the todo to delete'
+          schema:
+            type: 'number'
+      responses:
+        '200':
+          description: 'Todo deleted successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/todo'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+  /users/{userId}/todos:
+    get:
+      tags:
+        - 'todos'
+      summary: 'Retrieve all todos by user ID'
+      description: 'Retrieve all todos of an user by its ID, only admins and corresponding user can access this ressource'
+      operationId: 'getTodosByUserId'
+      parameters:
+        - name: 'userId'
+          in: 'path'
+          required: true
+          description: 'ID of the user'
+          schema:
+            type: 'number'
+      responses:
+        '200':
+          $ref: '#/components/responses/todosList'
+        '401':
+          $ref: '#/components/responses/authenticationFailed'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/internalServerError'
+
+components:
+  schemas:
+    user:
+      type: 'object'
+      properties:
+        id:
+          type: 'number'
+          example: 1
+        name:
+          type: 'string'
+          example: 'John Doe'
+        email:
+          type: 'string'
+          example: 'john.doe@gmail.com'
+        role:
+          type: 'string'
+          enum: ['user', 'admin']
+      required:
+        - id
+        - name
+        - email
+        - role
+    updateUser:
+      type: 'object'
+      properties:
+        name:
+          type: 'string'
+          example: 'John Doe'
+        email:
+          type: 'string'
+          example: 'john.doe@gmail.com'
+        role:
+          type: 'string'
+          enum: ['user', 'admin']
+    register:
+      type: 'object'
+      properties:
+        name:
+          type: 'string'
+          example: 'John Doe'
+        email:
+          type: 'string'
+          example: 'john.doe@gmail.com'
+        password:
+          type: 'string'
+          example: 'P4ssw0rd!'
+      required:
+        - name
+        - email
+        - password
+    login:
+      type: 'object'
+      properties:
+        email:
+          type: 'string'
+          example: 'john.doe@gmail.com'
+        password:
+          type: 'string'
+          example: 'P4ssw0rd!'
+      required:
+        - email
+        - password
+    todo:
+      type: 'object'
+      properties:
+        id:
+          type: 'number'
+          example: 1
+        title:
+          type: 'string'
+          example: 'Do something'
+        ownerId:
+          type: 'number'
+          example: 1
+        done:
+          type: 'boolean'
+          example: false
+      required:
+        - id
+        - title
+        - ownerId
+        - done
+    addTodo:
+      type: 'object'
+      properties:
+        title:
+          type: 'string'
+          example: 'Do something'
+      required:
+        - title
+    updateTodo:
+      type: 'object'
+      properties:
+        title:
+          type: 'string'
+          example: 'Do something else'
+        done:
+          type: 'boolean'
+          example: true
+  responses:
+    usersList:
+      description: 'An array of all users'
+      content:
+        application/json:
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/components/schemas/user'
+    notFound:
+      description: 'Not Found'
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+                example: 'Ressource not found'
+    badRequest:
+      description: 'Bad Request'
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+                example: 'The reason why request failed'
+    internalServerError:
+      description: 'Internal Server Error'
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+                example: 'Internal server error, please try again later'
+    authenticationFailed:
+      description: 'Authentication failed'
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+                example: 'Authentication failed'
+    forbidden:
+      description: 'Access forbidden'
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              message:
+                type: 'string'
+                example: 'Access forbidden'
+    todosList:
+      description: 'An array of all todos'
+      content:
+        application/json:
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/components/schemas/todo'
